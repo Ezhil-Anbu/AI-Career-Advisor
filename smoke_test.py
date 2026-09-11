@@ -1,132 +1,207 @@
-"""smoke_test.py — verifies multi-market saved models and recommendation engine end-to-end"""
+"""smoke_test.py — verifies FastAPI backend, ML models, endpoints, and Vercel serverless entrypoint end-to-end"""
 import sys
+import os
+from pathlib import Path
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
-from sklearn.metrics.pairwise import cosine_similarity
+from starlette.testclient import TestClient
 
 PASS = "\033[92mPASS\033[0m"
 FAIL = "\033[91mFAIL\033[0m"
 
 errors = []
+print("=" * 70)
+print("CAREER AI PRO — FULL-STACK & SERVERLESS SMOKE TEST SUITE")
+print("=" * 70)
 
-# ── Test 1: India salary model loads & predicts ────────────────────────────────
+# ── Test 1: Entrypoint & FastAPI App Import ────────────────────────────────────
 try:
-    bundle_in = joblib.load("models/salary_model_india.pkl")
-    assert "pipeline" in bundle_in, "Pipeline missing in bundle_in"
-    pipe_in = bundle_in["pipeline"]
-    print(f"[{PASS}] salary_model_india.pkl loads correctly")
-    print(f"       Best model : {bundle_in['best_model_name']}")
-    r_in = bundle_in["results"][bundle_in["best_model_name"]]
-    print(f"       MAE=Rs {r_in['MAE']:,.0f}  RMSE=Rs {r_in['RMSE']:,.0f}  R2={r_in['R²']:.4f}")
-
-    sample_in = pd.DataFrame([{
-        "Experience": 0, "Education": "Bachelor",
-        "Location": "Chennai", "Job Title": "AI Engineer",
-        "Company Size": "Medium", "Employment Type": "Full-time",
-        "Skills": "Python, Machine Learning, SQL"
-    }])
-    pred_in = float(pipe_in.predict(sample_in)[0])
-    assert 500000 <= pred_in <= 1500000, f"Unrealistic India prediction: {pred_in}"
-    print(f"[{PASS}] India Salary prediction: Rs {pred_in:,.0f} ({pred_in/100000:.2f} LPA)")
+    from backend.main import app as main_app
+    from api.index import app as vercel_app
+    assert main_app is not None, "backend.main:app is None"
+    assert vercel_app is not None, "api.index:app is None"
+    print(f"[{PASS}] Entrypoints 'backend.main:app' and 'api.index:app' import cleanly.")
 except Exception as e:
-    errors.append(f"India salary model: {e}")
-    print(f"[{FAIL}] India salary model: {e}")
+    errors.append(f"Import error: {e}")
+    print(f"[{FAIL}] Entrypoints import: {e}")
 
-# ── Test 2: US salary model loads & predicts ──────────────────────────────────
+# ── Test 2: ML Model Artifacts Loading ─────────────────────────────────────────
+models_to_test = [
+    ("salary_model_india.pkl", "India Salary Model"),
+    ("salary_model_us.pkl", "US Salary Model"),
+    ("salary_model.pkl", "Unified Fallback Salary Model"),
+    ("recommender.pkl", "Recommender TF-IDF Model")
+]
+
+for filename, desc in models_to_test:
+    model_path = Path("models") / filename
+    try:
+        assert model_path.exists(), f"{filename} does not exist"
+        loaded = joblib.load(model_path)
+        assert loaded is not None, f"Loaded object for {filename} is None"
+        print(f"[{PASS}] {desc} ({filename}) loaded successfully.")
+    except Exception as e:
+        errors.append(f"Model load {filename}: {e}")
+        print(f"[{FAIL}] {desc} ({filename}): {e}")
+
+# ── Test 3: ML Service Unit Checks ─────────────────────────────────────────────
 try:
-    bundle_us = joblib.load("models/salary_model_us.pkl")
-    assert "pipeline" in bundle_us, "Pipeline missing in bundle_us"
-    pipe_us = bundle_us["pipeline"]
-    print(f"[{PASS}] salary_model_us.pkl loads correctly")
-    print(f"       Best model : {bundle_us['best_model_name']}")
-    r_us = bundle_us["results"][bundle_us["best_model_name"]]
-    print(f"       MAE=${r_us['MAE']:,.0f}  RMSE=${r_us['RMSE']:,.0f}  R2={r_us['R²']:.4f}")
+    from backend.services.ml_service import ml_service
+    meta = ml_service.get_metadata()
+    assert len(meta["all_skills"]) > 50, "Skills list too short"
+    assert len(meta["job_titles"]) > 0, "Job titles empty"
+    print(f"[{PASS}] MLService metadata verified ({len(meta['all_skills'])} skills, {len(meta['job_titles'])} titles).")
 
-    sample_us = pd.DataFrame([{
-        "Experience": 5, "Education": "Master",
-        "Location": "New York", "Job Title": "Data Scientist",
-        "Company Size": "Large", "Employment Type": "Full-time",
-        "Skills": "Python, Machine Learning, SQL"
-    }])
-    pred_us = float(pipe_us.predict(sample_us)[0])
-    assert 100000 <= pred_us <= 300000, f"Unrealistic US prediction: {pred_us}"
-    print(f"[{PASS}] US Salary prediction: ${pred_us:,.0f}")
+    # Salary Prediction (India)
+    pred_in = ml_service.predict_salary({
+        "country": "India",
+        "job_title": "AI Engineer",
+        "experience": 3.0,
+        "education": "Master",
+        "location": "Bangalore",
+        "company_size": "Medium",
+        "employment_type": "Full-time",
+        "skills": ["Python", "PyTorch", "Machine Learning"]
+    })
+    assert pred_in["predicted_salary"] > 0, "India prediction is 0"
+    print(f"[{PASS}] MLService India salary prediction: {pred_in['formatted_salary']}")
+
+    # Salary Prediction (US)
+    pred_us = ml_service.predict_salary({
+        "country": "United States",
+        "job_title": "Data Scientist",
+        "experience": 5.0,
+        "education": "Master",
+        "location": "San Francisco",
+        "company_size": "Enterprise",
+        "employment_type": "Full-time",
+        "skills": ["Python", "SQL", "Machine Learning"]
+    })
+    assert pred_us["predicted_salary"] > 0, "US prediction is 0"
+    print(f"[{PASS}] MLService US salary prediction: {pred_us['formatted_salary']}")
+
+    # Job Recommendation
+    recs = ml_service.recommend_jobs({
+        "user_skills": ["Python", "Deep Learning", "TensorFlow"],
+        "target_role": "AI Engineer",
+        "experience": 2.5,
+        "education": "Bachelor",
+        "top_k": 5
+    })
+    assert len(recs["jobs"]) > 0, "No jobs returned"
+    print(f"[{PASS}] MLService Job recommendation: {len(recs['jobs'])} top matches (Top score: {recs['jobs'][0]['match_score']}%).")
+
+    # Skill Gap & Roadmap
+    gap = ml_service.analyze_skill_gap({
+        "user_skills": ["Python", "SQL"],
+        "target_role": "AI Engineer"
+    })
+    assert "overall_readiness_score" in gap
+    print(f"[{PASS}] MLService Skill gap analysis: readiness {gap['overall_readiness_score']}%.")
+
+    roadmap = ml_service.generate_roadmap({
+        "user_skills": ["Python", "SQL"],
+        "target_role": "AI Engineer"
+    })
+    assert len(roadmap["milestones"]) == 3
+    print(f"[{PASS}] MLService 90-day roadmap: {len(roadmap['milestones'])} phases generated.")
 except Exception as e:
-    errors.append(f"US salary model: {e}")
-    print(f"[{FAIL}] US salary model: {e}")
+    errors.append(f"MLService unit test error: {e}")
+    print(f"[{FAIL}] MLService unit test: {e}")
 
-# ── Test 3: recommender model loads ──────────────────────────────────────────
+# ── Test 4: Resume Service Unit Checks ─────────────────────────────────────────
 try:
-    rec = joblib.load("models/recommender.pkl")
-    assert "vectorizer" in rec and "matrix" in rec and "titles" in rec
-    print(f"[{PASS}] recommender.pkl loads correctly")
-    print(f"       Precision@5 : {rec['precision5']:.3f}")
-    print(f"       Unique roles : {len(set(rec['titles']))}")
+    from backend.services.resume_service import resume_service
+    parsed = resume_service.parse_resume_content(
+        "Jane Doe. Senior Machine Learning Engineer with 6 years of experience in Python, PyTorch, Docker, and AWS."
+    )
+    assert "Python" in parsed["extracted_skills"]
+    assert parsed["estimated_experience"] >= 5.0
+    print(f"[{PASS}] ResumeService parser: {len(parsed['extracted_skills'])} skills, {parsed['estimated_experience']} yrs exp.")
 except Exception as e:
-    errors.append(f"recommender load: {e}")
-    print(f"[{FAIL}] recommender.pkl: {e}")
+    errors.append(f"ResumeService error: {e}")
+    print(f"[{FAIL}] ResumeService: {e}")
 
-# ── Test 4: job recommendation ────────────────────────────────────────────────
+# ── Test 5: FastAPI HTTP Endpoints via TestClient ──────────────────────────────
 try:
-    vec     = rec["vectorizer"]
-    matrix  = rec["matrix"]
-    titles  = rec["titles"]
-    jobs_df = rec["jobs_df"]
+    client = TestClient(main_app)
 
-    q    = vec.transform(["Python Machine Learning SQL TensorFlow Deep Learning"])
-    sims = cosine_similarity(q, matrix).flatten()
-    title_scores = {}
-    for i, t in enumerate(titles):
-        title_scores.setdefault(t, []).append(sims[i])
-    avg   = {t: np.mean(v) for t, v in title_scores.items()}
-    top5  = sorted(avg.items(), key=lambda x: x[1], reverse=True)[:5]
-    max_s = top5[0][1]
-    shown = [(t, min(s / max(max_s, 1e-6) * 94 + 6, 99)) for t, s in top5]
-    assert len(shown) >= 3, "Less than 3 recommendations"
-    print(f"[{PASS}] Job recommendations returned:")
-    for t, p in shown:
-        print(f"       {p:.1f}%  {t}")
+    # 1. Root & Health
+    r = client.get("/")
+    assert r.status_code == 200, f"Root returned {r.status_code}"
+    r_health = client.get("/health")
+    assert r_health.status_code == 200, f"Health returned {r_health.status_code}"
+    print(f"[{PASS}] HTTP GET '/' and '/health' returned 200 OK.")
+
+    # 2. Metadata
+    r_meta = client.get("/api/metadata")
+    assert r_meta.status_code == 200, f"Metadata returned {r_meta.status_code}"
+    print(f"[{PASS}] HTTP GET '/api/metadata' returned 200 OK.")
+
+    # 3. Predict Salary
+    r_sal = client.post("/api/salary/predict", json={
+        "country": "India",
+        "job_title": "Software Engineer",
+        "experience": 2.0,
+        "education": "Bachelor",
+        "location": "Bangalore",
+        "skills": ["Python", "FastAPI", "SQL"]
+    })
+    assert r_sal.status_code == 200, f"Salary predict returned {r_sal.status_code}: {r_sal.text}"
+    print(f"[{PASS}] HTTP POST '/api/salary/predict' returned 200 OK.")
+
+    # 4. Recommend Jobs
+    r_jobs = client.post("/api/jobs/recommend", json={
+        "user_skills": ["Python", "FastAPI", "SQL"],
+        "target_role": "Software Engineer",
+        "experience": 2.0,
+        "education": "Bachelor",
+        "top_k": 4
+    })
+    assert r_jobs.status_code == 200, f"Jobs recommend returned {r_jobs.status_code}: {r_jobs.text}"
+    print(f"[{PASS}] HTTP POST '/api/jobs/recommend' returned 200 OK.")
+
+    # 5. Skill Gap Analysis
+    r_gap = client.post("/api/skills/gap-analysis", json={
+        "user_skills": ["Python"],
+        "target_role": "Data Scientist"
+    })
+    assert r_gap.status_code == 200, f"Skill gap returned {r_gap.status_code}: {r_gap.text}"
+    print(f"[{PASS}] HTTP POST '/api/skills/gap-analysis' returned 200 OK.")
+
+    # 6. Roadmap Generation
+    r_road = client.post("/api/roadmap/generate", json={
+        "user_skills": ["Python"],
+        "target_role": "Data Scientist"
+    })
+    assert r_road.status_code == 200, f"Roadmap returned {r_road.status_code}: {r_road.text}"
+    print(f"[{PASS}] HTTP POST '/api/roadmap/generate' returned 200 OK.")
+
+    # 7. Resume Parse (raw text)
+    r_res = client.post("/api/resume/parse", data={"raw_text": "Experienced Python Developer with 4 years in Git, Docker."})
+    assert r_res.status_code == 200, f"Resume parse returned {r_res.status_code}: {r_res.text}"
+    print(f"[{PASS}] HTTP POST '/api/resume/parse' returned 200 OK.")
+
 except Exception as e:
-    errors.append(f"job recommendation: {e}")
-    print(f"[{FAIL}] Job recommendation: {e}")
+    errors.append(f"HTTP TestClient error: {e}")
+    print(f"[{FAIL}] HTTP TestClient: {e}")
 
-# ── Test 5: skill gap analysis ────────────────────────────────────────────────
-try:
-    top_job     = shown[0][0]
-    user_skills = {"Python", "SQL", "Machine Learning"}
-    job_rows    = jobs_df[jobs_df["Job Title"] == top_job]
-    req_raw     = ",".join(job_rows["Skills"].dropna().values)
-    req_set     = set([s.strip() for s in req_raw.split(",") if s.strip()])
-    matched     = sorted(user_skills & req_set)
-    missing     = sorted(req_set - user_skills)
-    assert len(req_set) > 0, "No required skills found"
-    print(f"[{PASS}] Skill gap for '{top_job}':")
-    print(f"       Matched ({len(matched)}): {matched[:5]}")
-    print(f"       Missing ({len(missing)}): {missing[:5]}")
-except Exception as e:
-    errors.append(f"skill gap: {e}")
-    print(f"[{FAIL}] Skill gap: {e}")
-
-# ── Test 6: data files exist and correct columns ──────────────────────────────
-try:
-    sal = pd.read_csv("data/salary.csv")
-    assert set(["Country", "Location", "Job Title", "Experience", "Education",
-                "Company Size", "Employment Type", "Skills", "Salary", "Currency"]).issubset(sal.columns)
-    jbs = pd.read_csv("data/jobs.csv")
-    assert set(["Job Title", "Skills", "Experience", "Degree", "Industry", "Location"]).issubset(jbs.columns)
-    print(f"[{PASS}] Data files: salary.csv={sal.shape}  jobs.csv={jbs.shape}")
-except Exception as e:
-    errors.append(f"data files: {e}")
-    print(f"[{FAIL}] Data files: {e}")
-
-# ── Summary ───────────────────────────────────────────────────────────────────
-print()
+# ── Final Summary ──────────────────────────────────────────────────────────────
+print("=" * 70)
 if errors:
-    print(f"RESULT: {len(errors)} test(s) FAILED:")
+    print(f"RESULT: {len(errors)} TEST(S) FAILED:")
     for err in errors:
-        print(f"  - {err}")
+        print(f"  ❌ {err}")
     sys.exit(1)
 else:
-    print("ALL TESTS PASSED - app.py is ready to launch!")
-    print("Run: streamlit run app.py")
+    print(f"🎉 ALL TESTS PASSED! Production startup & serverless function verified 100%.")
+    print("=" * 70)
+

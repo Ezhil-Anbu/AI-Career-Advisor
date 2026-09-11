@@ -1,14 +1,18 @@
 import os
 import re
 import math
+import logging
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 import numpy as np
 import pandas as pd
 import joblib
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-MODELS_DIR = os.path.join(BASE_DIR, "models")
-DATA_DIR = os.path.join(BASE_DIR, "data")
+logger = logging.getLogger("ml_service")
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+MODELS_DIR = BASE_DIR / "models"
+DATA_DIR = BASE_DIR / "data"
 
 MATCH_WEIGHTS = {
     "skill": 0.50,
@@ -191,40 +195,67 @@ class MLService:
         self.load_artifacts()
 
     def load_artifacts(self):
-        # 1. Salary Models
-        india_model_path = os.path.join(MODELS_DIR, "salary_model_india.pkl")
-        us_model_path = os.path.join(MODELS_DIR, "salary_model_us.pkl")
-        fallback_model_path = os.path.join(MODELS_DIR, "salary_model.pkl")
+        # 1. India Salary Model
+        india_model_path = MODELS_DIR / "salary_model_india.pkl"
+        fallback_model_path = MODELS_DIR / "salary_model.pkl"
+        
+        if india_model_path.exists():
+            try:
+                loaded = joblib.load(india_model_path)
+                self.model_india = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
+                logger.info("Successfully loaded India salary model.")
+            except Exception as e:
+                logger.warning(f"Failed to load India salary model from {india_model_path}: {e}")
+        elif fallback_model_path.exists():
+            try:
+                loaded = joblib.load(fallback_model_path)
+                self.model_india = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
+                logger.info("Successfully loaded fallback salary model.")
+            except Exception as e:
+                logger.warning(f"Failed to load fallback salary model: {e}")
 
-        if os.path.exists(india_model_path):
-            loaded = joblib.load(india_model_path)
-            self.model_india = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
-        elif os.path.exists(fallback_model_path):
-            loaded = joblib.load(fallback_model_path)
-            self.model_india = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
+        # 2. US Salary Model
+        us_model_path = MODELS_DIR / "salary_model_us.pkl"
+        if us_model_path.exists():
+            try:
+                loaded = joblib.load(us_model_path)
+                self.model_us = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
+                logger.info("Successfully loaded US salary model.")
+            except Exception as e:
+                logger.warning(f"Failed to load US salary model from {us_model_path}: {e}")
 
-        if os.path.exists(us_model_path):
-            loaded = joblib.load(us_model_path)
-            self.model_us = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
+        # 3. Recommender
+        rec_path = MODELS_DIR / "recommender.pkl"
+        if rec_path.exists():
+            try:
+                loaded = joblib.load(rec_path)
+                self.recommender_pipeline = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
+                logger.info("Successfully loaded recommender artifact.")
+            except Exception as e:
+                logger.warning(f"Failed to load recommender artifact from {rec_path}: {e}")
 
-        # 2. Recommender
-        rec_path = os.path.join(MODELS_DIR, "recommender.pkl")
-        if os.path.exists(rec_path):
-            loaded = joblib.load(rec_path)
-            self.recommender_pipeline = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
+        # 4. Data files
+        jobs_path = DATA_DIR / "jobs.csv"
+        if jobs_path.exists():
+            try:
+                self.jobs_df = pd.read_csv(jobs_path)
+                logger.info(f"Loaded jobs database with {len(self.jobs_df)} records.")
+            except Exception as e:
+                logger.warning(f"Failed to load jobs.csv: {e}")
 
-        # 3. Data files
-        jobs_path = os.path.join(DATA_DIR, "jobs.csv")
-        if os.path.exists(jobs_path):
-            self.jobs_df = pd.read_csv(jobs_path)
+        sal_in_path = DATA_DIR / "salary_india.csv"
+        if sal_in_path.exists():
+            try:
+                self.salary_india_df = pd.read_csv(sal_in_path)
+            except Exception as e:
+                logger.warning(f"Failed to load salary_india.csv: {e}")
 
-        sal_in_path = os.path.join(DATA_DIR, "salary_india.csv")
-        if os.path.exists(sal_in_path):
-            self.salary_india_df = pd.read_csv(sal_in_path)
-
-        sal_us_path = os.path.join(DATA_DIR, "salary_us.csv")
-        if os.path.exists(sal_us_path):
-            self.salary_us_df = pd.read_csv(sal_us_path)
+        sal_us_path = DATA_DIR / "salary_us.csv"
+        if sal_us_path.exists():
+            try:
+                self.salary_us_df = pd.read_csv(sal_us_path)
+            except Exception as e:
+                logger.warning(f"Failed to load salary_us.csv: {e}")
 
     def get_metadata(self) -> Dict[str, Any]:
         locations_india = ["Bangalore", "Hyderabad", "Pune", "Mumbai", "Delhi", "Gurgaon", "Noida", "Chennai", "Coimbatore", "Kolkata"]
