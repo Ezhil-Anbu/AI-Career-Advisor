@@ -5,7 +5,6 @@ from typing import List, Dict, Any, Optional
 import numpy as np
 import pandas as pd
 import joblib
-from sklearn.metrics.pairwise import cosine_similarity
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
@@ -198,17 +197,21 @@ class MLService:
         fallback_model_path = os.path.join(MODELS_DIR, "salary_model.pkl")
 
         if os.path.exists(india_model_path):
-            self.model_india = joblib.load(india_model_path)
+            loaded = joblib.load(india_model_path)
+            self.model_india = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
         elif os.path.exists(fallback_model_path):
-            self.model_india = joblib.load(fallback_model_path)
+            loaded = joblib.load(fallback_model_path)
+            self.model_india = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
 
         if os.path.exists(us_model_path):
-            self.model_us = joblib.load(us_model_path)
+            loaded = joblib.load(us_model_path)
+            self.model_us = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
 
         # 2. Recommender
         rec_path = os.path.join(MODELS_DIR, "recommender.pkl")
         if os.path.exists(rec_path):
-            self.recommender_pipeline = joblib.load(rec_path)
+            loaded = joblib.load(rec_path)
+            self.recommender_pipeline = loaded.get("pipeline", loaded) if isinstance(loaded, dict) else loaded
 
         # 3. Data files
         jobs_path = os.path.join(DATA_DIR, "jobs.csv")

@@ -1,0 +1,35 @@
+# Frontend Next.js directory (deployed separately or handled via Next.js)
+frontend/
+.next/
+node_modules/
+
+# Python virtual environments & bytecode
+.venv/
+.venv*/
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter notebooks and EDA charts
+notebooks/
+images/
+*.ipynb
+*.png
+*.jpg
+*.jpeg
+
+# Development, training, and testing scripts
+generate_data.py
+train_models.py
+retrain_lightweight.py
+smoke_test.py
+test_backend.py
+tmp_*.py
+
+# Git and IDE configurations
+.git/
+.github/
+.vscode/
+.idea/
