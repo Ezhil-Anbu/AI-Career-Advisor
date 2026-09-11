@@ -11,6 +11,18 @@ __pycache__/
 *$py.class
 *.so
 
+# Node / Next.js
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+build/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
