@@ -2,9 +2,7 @@
 
 import React, { useState } from 'react';
 import {
-  BookOpen,
   CheckCircle2,
-  ExternalLink,
   Sparkles,
   ArrowRight,
   Target,
@@ -191,42 +189,6 @@ export const SkillGapTab: React.FC<SkillGapTabProps> = ({
           )}
         </div>
 
-        {/* Curated Learning Resources */}
-        {skillGap.learning_resources.length > 0 && (
-          <div className="pt-3 border-t border-white/10 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white/60 flex items-center gap-1.5">
-              <BookOpen className="h-3.5 w-3.5 text-orange-400" />
-              Curated Courses & Learning Resources
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {skillGap.learning_resources.map((res) => (
-                <a
-                  key={res.skill}
-                  href={res.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-all hover:border-orange-500/40 hover:bg-orange-500/5 group flex flex-col justify-between gap-3"
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-xs font-bold text-white group-hover:text-orange-300 transition-colors">
-                        {res.title}
-                      </h4>
-                      <ExternalLink className="h-3.5 w-3.5 text-white/40 shrink-0 group-hover:text-orange-400 transition-colors" />
-                    </div>
-                    <p className="text-[11px] text-white/50 mt-1 leading-relaxed">{res.description}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] pt-2 border-t border-white/5">
-                    <span className="font-semibold text-orange-400">Master {res.skill}</span>
-                    <span className="text-white/40 text-[10px]">Free / Online</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
       </section>
 
       {/* ─── 3. PROGRESSIVE DISCLOSURE: VIEW & ADD ALL SKILLS ─── */}

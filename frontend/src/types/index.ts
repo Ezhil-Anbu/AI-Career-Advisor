@@ -68,22 +68,12 @@ export interface JobMatch {
   apply_url?: string;
 }
 
-export interface LearningResource {
-  skill: string;
-  title: string;
-  description: string;
-  icon: string;
-  url: string;
-  priority: 'Critical' | 'Recommended' | 'Bonus';
-}
-
 export interface SkillGapAnalysis {
   target_role: string;
   overall_readiness_score: number;
   matched_skills: string[];
   missing_critical: string[];
   missing_recommended: string[];
-  learning_resources: LearningResource[];
 }
 
 export interface RoadmapMilestone {

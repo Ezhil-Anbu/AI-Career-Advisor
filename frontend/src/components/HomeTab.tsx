@@ -30,6 +30,7 @@ import {
 } from '@/types';
 
 interface HomeTabProps {
+  profileConfirmed: boolean;
   country: string;
   jobTitle: string;
   experience: number;
@@ -48,6 +49,7 @@ interface HomeTabProps {
 }
 
 export const HomeTab: React.FC<HomeTabProps> = ({
+  profileConfirmed,
   country,
   jobTitle,
   experience,
@@ -171,7 +173,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       </section>
 
       {/* ─── 2. MAIN DASHBOARD: YOUR CAREER SNAPSHOT ─── */}
-      <section className="flex flex-col gap-4">
+      <section className={`flex flex-col gap-4 ${profileConfirmed ? '' : 'hidden'}`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white">Your Career Snapshot</h2>
@@ -338,7 +340,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       </section>
 
       {/* ─── 3. WHAT SHOULD YOU DO NEXT? ACTION CARDS ─── */}
-      <section className="flex flex-col gap-4">
+      <section className={`flex flex-col gap-4 ${profileConfirmed ? '' : 'hidden'}`}>
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-white">What should you do next?</h2>
           <p className="text-xs sm:text-sm text-white/60">
@@ -446,7 +448,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
       </section>
 
       {/* ─── 4. QUICK SAMPLE PERSONAS (CLEAN FOOTER SECTION) ─── */}
-      {personas.length > 0 && (
+      {profileConfirmed && personas.length > 0 && (
         <section className="glass-panel p-5 border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs text-white/70">
             <Zap className="h-4 w-4 text-orange-400 shrink-0" />

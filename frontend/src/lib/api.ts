@@ -359,24 +359,6 @@ function getFallbackSkillGap(p: any): SkillGapAnalysis {
     matched_skills: p.user_skills.slice(0, 4),
     missing_critical: ['System Design', 'Docker', 'Kubernetes'],
     missing_recommended: ['MLflow', 'Terraform'],
-    learning_resources: [
-      {
-        skill: 'Docker & Kubernetes',
-        title: 'Production Container Orchestration',
-        description: 'Deploy resilient containerized workloads at scale.',
-        icon: 'Box',
-        url: 'https://kubernetes.io/docs/tutorials/',
-        priority: 'Critical',
-      },
-      {
-        skill: 'System Design',
-        title: 'Scalable Microservices Architecture',
-        description: 'Design distributed high-throughput enterprise backends.',
-        icon: 'Server',
-        url: 'https://github.com/donnemartin/system-design-primer',
-        priority: 'Critical',
-      },
-    ],
   };
 }
 

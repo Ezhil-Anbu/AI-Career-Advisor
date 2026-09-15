@@ -70,21 +70,12 @@ class SkillGapRequest(BaseModel):
     target_role: str
     experience: Optional[float] = 2.0
 
-class LearningResource(BaseModel):
-    skill: str
-    title: str
-    description: str
-    icon: str
-    url: str
-    priority: str  # 'Critical', 'Recommended', 'Bonus'
-
 class SkillGapResponse(BaseModel):
     target_role: str
     overall_readiness_score: float
     matched_skills: List[str]
     missing_critical: List[str]
     missing_recommended: List[str]
-    learning_resources: List[LearningResource]
 
 class RoadmapMilestone(BaseModel):
     phase: str

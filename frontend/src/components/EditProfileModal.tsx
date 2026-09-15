@@ -14,6 +14,7 @@ import {
   Building2
 } from 'lucide-react';
 import { AppMetadata } from '@/types';
+import { ROLE_OPTIONS } from '@/lib/roles';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ interface EditProfileModalProps {
   setEmploymentType: (type: string) => void;
   skills: string[];
   setSkills: (skills: string[]) => void;
+  onApply: () => void;
 }
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
@@ -55,6 +57,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   setEmploymentType,
   skills,
   setSkills,
+  onApply,
 }) => {
   const [skillSearch, setSkillSearch] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -112,7 +115,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 onChange={(e) => setJobTitle(e.target.value)}
                 className="glass-input w-full px-3 py-2 text-xs font-medium cursor-pointer"
               >
-                {metadata.job_titles.map((title) => (
+                {Array.from(new Set([...ROLE_OPTIONS, ...metadata.job_titles])).map((title) => (
                   <option key={title} value={title} className="bg-[#0e121e] text-white">
                     {title}
                   </option>

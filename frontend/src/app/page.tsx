@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Sparkles } from 'lucide-react';
 import {
   AppMetadata,
   SalaryPrediction,
@@ -27,6 +26,7 @@ import { RoadmapTab } from '@/components/RoadmapTab';
 import { ResumeModal } from '@/components/ResumeModal';
 import { ExportModal } from '@/components/ExportModal';
 import { EditProfileModal } from '@/components/EditProfileModal';
+import { CareerSnapshotModal } from '@/components/CareerSnapshotModal';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'salary' | 'jobs' | 'skills' | 'roadmap'>('home');
@@ -62,6 +62,9 @@ export default function Home() {
   const [isResumeModalOpen, setIsResumeModalOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState<boolean>(false);
+  const [isSnapshotOpen, setIsSnapshotOpen] = useState<boolean>(false);
+  const [profileConfirmed, setProfileConfirmed] = useState<boolean>(false);
+  const [resumeProfile, setResumeProfile] = useState<ResumeParseResult | null>(null);
 
   // 1. Initial Metadata Load
   useEffect(() => {
@@ -156,15 +159,11 @@ export default function Home() {
 
   // Handle parsed resume autofill
   const handleApplyResumeData = (parsed: ResumeParseResult) => {
+    setResumeProfile(parsed);
     if (parsed.extracted_skills.length > 0) {
       setSkills(parsed.extracted_skills);
     }
-    if (parsed.extracted_roles.length > 0) {
-      setJobTitle(parsed.extracted_roles[0]);
-    }
-    if (parsed.estimated_experience > 0) {
-      setExperience(parsed.estimated_experience);
-    }
+    setExperience(parsed.estimated_experience);
     if (parsed.extracted_education) {
       setEducation(parsed.extracted_education);
     }
@@ -176,6 +175,21 @@ export default function Home() {
       // location will be set after country updates (useEffect handles default adjustment)
       setLocation(parsed.location);
     }
+    setIsResumeModalOpen(false);
+    setIsSnapshotOpen(true);
+  };
+
+  const handleApplyManualProfile = () => {
+    setResumeProfile(null);
+    setIsEditProfileModalOpen(false);
+    setIsSnapshotOpen(true);
+  };
+
+  const handleConfirmSnapshot = (targetRole: string) => {
+    setJobTitle(targetRole);
+    setProfileConfirmed(true);
+    setIsSnapshotOpen(false);
+    setActiveTab('home');
   };
 
   const toggleSkill = (skill: string) => {
@@ -208,6 +222,7 @@ export default function Home() {
             {/* 1. HOME / SNAPSHOT TAB */}
             {activeTab === 'home' && (
               <HomeTab
+                profileConfirmed={profileConfirmed}
                 country={country}
                 jobTitle={jobTitle}
                 experience={experience}
@@ -341,6 +356,22 @@ export default function Home() {
         setEmploymentType={setEmploymentType}
         skills={skills}
         setSkills={setSkills}
+        onApply={handleApplyManualProfile}
+      />
+
+      <CareerSnapshotModal
+        isOpen={isSnapshotOpen}
+        onClose={() => setIsSnapshotOpen(false)}
+        onConfirm={handleConfirmSnapshot}
+        profile={resumeProfile}
+        currentRole={resumeProfile?.role || resumeProfile?.extracted_roles[0] || ''}
+        jobTitle={jobTitle}
+        experience={experience}
+        location={location}
+        country={country}
+        education={education}
+        skills={skills}
+        availableRoles={metadata?.job_titles || []}
       />
     </div>
   );

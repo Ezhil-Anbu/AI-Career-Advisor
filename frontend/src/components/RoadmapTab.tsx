@@ -6,11 +6,9 @@ import {
   CheckCircle2,
   Calendar,
   Sparkles,
-  ArrowRight,
   ListTodo,
   Award,
-  Target,
-  BookOpen
+  Target
 } from 'lucide-react';
 import { CareerRoadmap, SkillGapAnalysis } from '@/types';
 import confetti from 'canvas-confetti';
@@ -219,26 +217,6 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({
         })}
       </div>
 
-      {/* ─── Bottom CTA Card ─── */}
-      <div className="glass-panel p-6 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
-            <BookOpen className="h-5 w-5" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-white">Need learning resources?</h4>
-            <p className="text-xs text-white/50">Explore direct links to courses, tutorials, and documentations.</p>
-          </div>
-        </div>
-
-        <button
-          onClick={onNavigateToSkills}
-          className="btn-gradient flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-bold shrink-0"
-        >
-          <span>View Learning Resources</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
     </div>
   );
 };

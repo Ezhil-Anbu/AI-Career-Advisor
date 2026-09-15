@@ -1,0 +1,15 @@
+export const ROLE_OPTIONS = [
+  'Software Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+  'Mobile App Developer', 'Game Developer', 'Data Analyst', 'Business Analyst',
+  'Data Scientist', 'Data Engineer', 'Analytics Engineer', 'Machine Learning Engineer',
+  'AI Engineer', 'NLP Engineer', 'Computer Vision Engineer', 'MLOps Engineer',
+  'Research Scientist', 'Cloud Engineer', 'Cloud Architect', 'DevOps Engineer',
+  'Site Reliability Engineer', 'Platform Engineer', 'Solutions Architect',
+  'Cybersecurity Analyst', 'Security Engineer', 'Penetration Tester', 'Security Architect',
+  'Database Administrator', 'Network Engineer', 'Product Manager', 'Technical Product Manager',
+  'Project Manager', 'Scrum Master', 'Program Manager', 'UI Designer', 'UX Designer',
+  'Product Designer', 'UX Researcher', 'Graphic Designer', 'Financial Analyst',
+  'Financial Consultant', 'Operations Manager', 'Management Consultant', 'Marketing Manager',
+  'Digital Marketing Specialist', 'Content Strategist', 'Sales Engineer', 'Technical Writer',
+  'Human Resources Specialist', 'Quality Assurance Engineer', 'Test Automation Engineer',
+];

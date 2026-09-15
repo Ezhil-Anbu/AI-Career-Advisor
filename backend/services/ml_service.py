@@ -99,41 +99,6 @@ ALL_SKILLS = sorted([
     "Project Management"
 ])
 
-LEARNING_MAP = {
-    "TensorFlow":       ("TensorFlow Developer Certificate", "Master deep learning models & neural networks", "GraduationCap", "https://www.tensorflow.org/learn"),
-    "PyTorch":          ("Deep Learning with PyTorch", "Build cutting-edge neural networks with PyTorch", "Flame", "https://pytorch.org/tutorials/"),
-    "Docker":           ("Docker & Containerization Mastery", "Learn container orchestration and deployment", "Box", "https://docs.docker.com/get-started/"),
-    "Kubernetes":       ("Kubernetes Certified Administrator", "Scale cloud native applications seamlessly", "Compass", "https://kubernetes.io/docs/tutorials/"),
-    "AWS":              ("AWS Certified Solutions Architect", "Design and deploy scalable systems on AWS", "Cloud", "https://aws.amazon.com/training/"),
-    "Azure":            ("Azure Fundamentals & Cloud Architecture", "Master cloud solutions with Microsoft Azure", "CloudSun", "https://learn.microsoft.com/azure/"),
-    "GCP":              ("Google Cloud Engineer Course", "Develop data pipelines and infrastructure on GCP", "CloudLightning", "https://cloud.google.com/training"),
-    "Spark":            ("Apache Spark for Big Data Analytics", "Process large-scale distributed datasets", "Zap", "https://spark.apache.org/docs/latest/"),
-    "Kafka":            ("Event Streaming with Apache Kafka", "Real-time event processing and streaming", "Layers", "https://developer.confluent.io/"),
-    "Airflow":          ("Data Pipeline Orchestration with Airflow", "Schedule and monitor complex ETL workflows", "Wind", "https://airflow.apache.org/docs/"),
-    "Terraform":        ("Infrastructure as Code with Terraform", "Automate cloud provisioning across providers", "Boxes", "https://developer.hashicorp.com/terraform"),
-    "React":            ("Modern React & Next.js Pro", "Build interactive frontend web interfaces", "Code2", "https://react.dev/learn"),
-    "TypeScript":       ("TypeScript Essentials for Developers", "Add type safety to modern JavaScript applications", "Code", "https://www.typescriptlang.org/docs/"),
-    "NLP":              ("Natural Language Processing Specialization", "Build sentiment models, chatbots, and summarizers", "MessageSquare", "https://huggingface.co/learn"),
-    "BERT":             ("Transformer Models & BERT Fine-Tuning", "Deep dive into state-of-the-art NLP models", "Brain", "https://huggingface.co/docs/transformers"),
-    "Transformers":     ("Hugging Face Transformers Masterclass", "Fine-tune pretrained foundation models", "Bot", "https://huggingface.co/course"),
-    "Hugging Face":     ("Hugging Face NLP & Vision Fundamentals", "Deploy AI models using the Hugging Face Hub", "Smile", "https://huggingface.co/learn"),
-    "MLflow":           ("MLOps & ML Experiment Tracking", "Manage ML lifecycles, metrics, and models", "LineChart", "https://mlflow.org/docs/latest/index.html"),
-    "Statistics":       ("Applied Statistics for Data Science", "Master probability, hypothesis testing, and inference", "Sigma", "https://www.coursera.org/learn/stanford-statistics"),
-    "Power BI":         ("Power BI Data Visualization Professional", "Create executive dashboards and DAX metrics", "BarChart", "https://learn.microsoft.com/power-bi/"),
-    "Tableau":          ("Tableau Desktop & Business Analytics", "Transform raw data into interactive visual insights", "PieChart", "https://www.tableau.com/learn"),
-    "SQL":              ("Advanced SQL for Data Engineering", "Complex queries, window functions, and indexing", "Database", "https://mode.com/sql-tutorial/"),
-    "Machine Learning": ("Machine Learning Specialization by Andrew Ng", "Supervised, unsupervised learning, and best practices", "Cpu", "https://www.coursera.org/specializations/machine-learning-introduction"),
-    "Deep Learning":    ("Practical Deep Learning for Coders", "Hands-on neural network training and computer vision", "Network", "https://www.fast.ai/"),
-    "Scikit-learn":     ("Scikit-learn Machine Learning Toolkit", "Classification, regression, and model evaluation", "Settings", "https://scikit-learn.org/stable/user_guide.html"),
-    "OpenCV":           ("Computer Vision with OpenCV & Python", "Image processing, object detection, and feature extraction", "Eye", "https://docs.opencv.org/"),
-    "Figma":            ("UI/UX Design Systems in Figma", "Prototype responsive interfaces and component libraries", "Figma", "https://help.figma.com/hc/en-us"),
-    "Agile":            ("Agile Software Development & Scrum", "Iterative project delivery and team dynamics", "RefreshCw", "https://www.scrum.org/resources"),
-    "Git":              ("Git & GitHub Version Control Mastery", "Branching strategies, pull requests, and CI/CD", "GitBranch", "https://git-scm.com/doc"),
-    "Linux":            ("Linux System Administration & Shell", "Command line proficiency and server management", "Terminal", "https://training.linuxfoundation.org/"),
-    "Security":         ("CompTIA Security+ Certification", "Cybersecurity fundamentals, threats, and defense", "ShieldCheck", "https://www.cybrary.it/"),
-    "System Design":    ("Grokking the System Design Architecture", "Scalable microservices, caching, and load balancing", "Server", "https://github.com/donnemartin/system-design-primer"),
-}
-
 SAMPLE_PERSONAS = [
     {
         "id": "junior_python",
@@ -502,7 +467,6 @@ class MLService:
         matched = []
         missing_critical = []
         missing_recommended = []
-        learning_resources = []
 
         for i, skill in enumerate(top_role_skills):
             if skill.lower() in user_skills or any(SKILL_SYNONYMS.get(us, us) == SKILL_SYNONYMS.get(skill.lower(), skill.lower()) for us in user_skills):
@@ -510,26 +474,8 @@ class MLService:
             else:
                 if i < 4:
                     missing_critical.append(skill)
-                    priority = "Critical"
                 else:
                     missing_recommended.append(skill)
-                    priority = "Recommended"
-
-                res = LEARNING_MAP.get(skill, (
-                    f"{skill} Masterclass",
-                    f"Comprehensive hands-on course covering {skill} in modern software workflows.",
-                    "BookOpen",
-                    f"https://www.coursera.org/search?query={skill.replace(' ', '+')}"
-                ))
-
-                learning_resources.append({
-                    "skill": skill,
-                    "title": res[0],
-                    "description": res[1],
-                    "icon": res[2],
-                    "url": res[3],
-                    "priority": priority
-                })
 
         readiness = (len(matched) / max(len(top_role_skills), 1)) * 100
 
@@ -538,8 +484,7 @@ class MLService:
             "overall_readiness_score": round(readiness, 1),
             "matched_skills": matched,
             "missing_critical": missing_critical,
-            "missing_recommended": missing_recommended,
-            "learning_resources": learning_resources
+            "missing_recommended": missing_recommended
         }
 
     def generate_roadmap(self, payload: Dict[str, Any]) -> Dict[str, Any]:
