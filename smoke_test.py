@@ -185,10 +185,32 @@ try:
     assert r_road.status_code == 200, f"Roadmap returned {r_road.status_code}: {r_road.text}"
     print(f"[{PASS}] HTTP POST '/api/roadmap/generate' returned 200 OK.")
 
-    # 7. Resume Parse (raw text)
+    # 7. Resume Parse (raw text) — legacy endpoint
     r_res = client.post("/api/resume/parse", data={"raw_text": "Experienced Python Developer with 4 years in Git, Docker."})
     assert r_res.status_code == 200, f"Resume parse returned {r_res.status_code}: {r_res.text}"
     print(f"[{PASS}] HTTP POST '/api/resume/parse' returned 200 OK.")
+
+    # 8. Resume Analyze — new rich endpoint
+    SAMPLE_RESUME = (
+        "Priya Sharma\nEmail: priya@example.com | Phone: +91 9876501234\n"
+        "Location: Bangalore, India\n\n"
+        "AI Engineer with 4 years of experience in Python, TensorFlow, Docker, Kubernetes.\n\n"
+        "EDUCATION\nMaster of Technology (M.Tech) in AI\nIIT Bangalore | 2018 - 2020\n\n"
+        "EXPERIENCE\nAI Engineer | DataCorp\nJan 2020 - Present\n- Built ML pipelines.\n"
+    )
+    r_analyze = client.post("/api/resume/analyze", data={"raw_text": SAMPLE_RESUME})
+    assert r_analyze.status_code == 200, f"Resume analyze returned {r_analyze.status_code}: {r_analyze.text}"
+    analyze_data = r_analyze.json()
+    assert analyze_data.get("success") is True, f"Resume analyze success=False: {analyze_data.get('message')}"
+    assert "profile" in analyze_data, "Resume analyze missing 'profile'"
+    prof_data = analyze_data["profile"]
+    assert "Python" in prof_data.get("skills", []), f"Python not in skills: {prof_data.get('skills')}"
+    assert prof_data.get("education") in ["Master", "Bachelor", "PhD"], \
+        f"Education unexpected: {prof_data.get('education')}"
+    print(f"[{PASS}] HTTP POST '/api/resume/analyze' returned 200 OK — "
+          f"extracted {len(prof_data.get('skills', []))} skills, "
+          f"education={prof_data.get('education')}, "
+          f"location={prof_data.get('location')}.")
 
 except Exception as e:
     errors.append(f"HTTP TestClient error: {e}")

@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
+# ─── Salary Prediction Schemas ────────────────────────────────────────────────
 class SalaryPredictionRequest(BaseModel):
     country: str = Field(default="India", description="Country ('India' or 'United States')")
     job_title: str = Field(..., description="Job role")
@@ -29,6 +30,8 @@ class SalaryPredictionResponse(BaseModel):
     forecast_3yr: List[Dict[str, Any]]
     market_benchmark: Dict[str, Any]
 
+
+# ─── Job Recommendation Schemas ───────────────────────────────────────────────
 class JobRecommendRequest(BaseModel):
     user_skills: List[str] = Field(..., description="List of user skills")
     target_role: Optional[str] = Field(None, description="Optional target job title")
@@ -60,6 +63,8 @@ class JobRecommendResponse(BaseModel):
     total_matched: int
     jobs: List[JobMatchResult]
 
+
+# ─── Skill Gap & Roadmap Schemas ──────────────────────────────────────────────
 class SkillGapRequest(BaseModel):
     user_skills: List[str]
     target_role: str
@@ -93,9 +98,65 @@ class RoadmapResponse(BaseModel):
     target_role: str
     milestones: List[RoadmapMilestone]
 
+
+# ─── Comprehensive Resume Analyzer Schemas ────────────────────────────────────
+class ProjectItem(BaseModel):
+    name: str
+    description: Optional[str] = None
+    skills: List[str] = Field(default_factory=list)
+
+class ExperienceItem(BaseModel):
+    company: Optional[str] = None
+    role: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+    skills: List[str] = Field(default_factory=list)
+
+class CandidateProfile(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    role: Optional[str] = None
+    role_confidence: Optional[float] = None
+    target_role: Optional[str] = None
+    experience_years: Optional[float] = None
+    education: Optional[str] = None
+    location: Optional[str] = None
+    country: Optional[str] = "India"
+    skills: List[str] = Field(default_factory=list)
+    soft_skills: List[str] = Field(default_factory=list)
+    certifications: List[str] = Field(default_factory=list)
+    projects: List[ProjectItem] = Field(default_factory=list)
+    work_experience: List[ExperienceItem] = Field(default_factory=list)
+    summary: Optional[str] = None
+
+class ResumeMetadata(BaseModel):
+    pages_processed: int = 1
+    text_characters: int = 0
+    is_scanned_pdf: bool = False
+    evidence: Dict[str, Any] = Field(default_factory=dict)
+
+class ResumeAnalyzeResponse(BaseModel):
+    success: bool
+    profile: CandidateProfile
+    metadata: ResumeMetadata
+    error_code: Optional[str] = None
+    message: Optional[str] = None
+
+# Backwards compatible legacy schema
 class ResumeParseResponse(BaseModel):
     extracted_skills: List[str]
     extracted_roles: List[str]
     estimated_experience: float
     extracted_education: str
     raw_text_length: int
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    target_role: Optional[str] = None
+    soft_skills: List[str] = Field(default_factory=list)
+    certifications: List[str] = Field(default_factory=list)
+    projects: List[ProjectItem] = Field(default_factory=list)
+    work_experience: List[ExperienceItem] = Field(default_factory=list)

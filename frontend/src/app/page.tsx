@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Sparkles, DollarSign, Briefcase, Compass, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import {
   AppMetadata,
   SalaryPrediction,
@@ -19,17 +19,20 @@ import {
   generateRoadmap,
 } from '@/lib/api';
 import { Header } from '@/components/Header';
+import { HomeTab } from '@/components/HomeTab';
 import { SalaryTab } from '@/components/SalaryTab';
 import { JobsTab } from '@/components/JobsTab';
 import { SkillGapTab } from '@/components/SkillGapTab';
+import { RoadmapTab } from '@/components/RoadmapTab';
 import { ResumeModal } from '@/components/ResumeModal';
 import { ExportModal } from '@/components/ExportModal';
+import { EditProfileModal } from '@/components/EditProfileModal';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'salary' | 'jobs' | 'skills'>('salary');
+  const [activeTab, setActiveTab] = useState<'home' | 'salary' | 'jobs' | 'skills' | 'roadmap'>('home');
   const [metadata, setMetadata] = useState<AppMetadata | null>(null);
 
-  // User Parameters
+  // User Profile Parameters
   const [country, setCountry] = useState<string>('India');
   const [jobTitle, setJobTitle] = useState<string>('Data Scientist');
   const [experience, setExperience] = useState<number>(3.5);
@@ -58,6 +61,7 @@ export default function Home() {
   const [loadingRoadmap, setLoadingRoadmap] = useState<boolean>(false);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState<boolean>(false);
 
   // 1. Initial Metadata Load
   useEffect(() => {
@@ -81,9 +85,9 @@ export default function Home() {
         }
       }
     }
-  }, [country, metadata]);
+  }, [country, metadata, location]);
 
-  // 3. Fetch Predictions & Recommendations
+  // 3. Fetch Predictions & Recommendations from Backend API
   const updateInsights = useCallback(async () => {
     setLoadingSalary(true);
     setLoadingJobs(true);
@@ -164,11 +168,27 @@ export default function Home() {
     if (parsed.extracted_education) {
       setEducation(parsed.extracted_education);
     }
+    // Apply location & country extracted from the resume
+    if (parsed.country && (parsed.country === 'India' || parsed.country === 'United States')) {
+      setCountry(parsed.country);
+    }
+    if (parsed.location) {
+      // location will be set after country updates (useEffect handles default adjustment)
+      setLocation(parsed.location);
+    }
+  };
+
+  const toggleSkill = (skill: string) => {
+    if (skills.includes(skill)) {
+      setSkills(skills.filter((s) => s !== skill));
+    } else {
+      setSkills([...skills, skill]);
+    }
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Top Navbar */}
+    <div className="flex min-h-screen flex-col bg-[#07090e] text-white">
+      {/* ─── Top Header ─── */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -178,49 +198,35 @@ export default function Home() {
         setCountry={setCountry}
         onOpenResumeModal={() => setIsResumeModalOpen(true)}
         onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenEditProfileModal={() => setIsEditProfileModalOpen(true)}
       />
 
-      {/* Main Container */}
-      <main className="mx-auto max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 w-full space-y-6">
-        {/* Hero Glass Banner */}
-        <div className="glass-panel p-6 md:p-8 relative overflow-hidden">
-          <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-xs font-bold text-orange-400 mb-3">
-              <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-              <span>AI-Powered Career & Compensation Intelligence</span>
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              Design Your <span className="bg-gradient-to-r from-rose-400 via-orange-400 to-amber-300 bg-clip-text text-transparent">Career Trajectory</span> with Precision ML
-            </h1>
-            <p className="mt-2 text-xs sm:text-sm text-white/70 leading-relaxed max-w-2xl">
-              Benchmark your compensation across Indian and US tech markets, discover high-match role openings, and close critical skill gaps with custom 90-day learning roadmaps.
-            </p>
-
-            {/* Quick KPI stats */}
-            <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
-                <div className="text-lg font-black text-white">92.4%</div>
-                <div className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Model R² Accuracy</div>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
-                <div className="text-lg font-black text-orange-400">120+</div>
-                <div className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Tracked Tech Skills</div>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
-                <div className="text-lg font-black text-emerald-400">30+</div>
-                <div className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Target Job Titles</div>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-center">
-                <div className="text-lg font-black text-cyan-400">Dual Market</div>
-                <div className="text-[10px] uppercase font-bold text-white/40 tracking-wider">INR ₹ / USD $</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Content */}
+      {/* ─── Main Content ─── */}
+      <main className="mx-auto max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 w-full">
         {metadata && (
           <div>
+            {/* 1. HOME / SNAPSHOT TAB */}
+            {activeTab === 'home' && (
+              <HomeTab
+                country={country}
+                jobTitle={jobTitle}
+                experience={experience}
+                location={location}
+                education={education}
+                skills={skills}
+                prediction={prediction}
+                jobs={jobs}
+                skillGap={skillGap}
+                roadmap={roadmap}
+                personas={metadata.sample_personas || []}
+                onSelectPersona={handleSelectPersona}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onOpenResumeModal={() => setIsResumeModalOpen(true)}
+                onOpenEditProfileModal={() => setIsEditProfileModalOpen(true)}
+              />
+            )}
+
+            {/* 2. SALARY TAB */}
             {activeTab === 'salary' && (
               <SalaryTab
                 metadata={metadata}
@@ -244,40 +250,57 @@ export default function Home() {
               />
             )}
 
+            {/* 3. JOBS TAB */}
             {activeTab === 'jobs' && (
               <JobsTab
                 jobs={jobs}
                 loading={loadingJobs}
                 metadata={metadata}
                 userSkills={skills}
+                onNavigateToSkills={() => setActiveTab('skills')}
               />
             )}
 
+            {/* 4. SKILLS TAB */}
             {activeTab === 'skills' && (
               <SkillGapTab
                 skillGap={skillGap}
-                roadmap={roadmap}
                 loading={loadingRoadmap}
                 targetRole={jobTitle}
+                userSkills={skills}
+                metadata={metadata}
+                onToggleSkill={toggleSkill}
+                onNavigateToRoadmap={() => setActiveTab('roadmap')}
+              />
+            )}
+
+            {/* 5. ROADMAP TAB */}
+            {activeTab === 'roadmap' && (
+              <RoadmapTab
+                roadmap={roadmap}
+                skillGap={skillGap}
+                loading={loadingRoadmap}
+                targetRole={jobTitle}
+                onNavigateToSkills={() => setActiveTab('skills')}
               />
             )}
           </div>
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="mt-12 border-t border-white/10 bg-[#05070a]/80 py-6 text-center text-xs text-white/40 backdrop-blur-xl">
+      {/* ─── Clean Footer ─── */}
+      <footer className="mt-16 border-t border-white/10 bg-[#05070a]/90 py-6 text-center text-xs text-white/50 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-white">CAREER AI® Pro</span>
+            <span className="font-bold text-white">CAREER AI</span>
             <span>•</span>
-            <span>Full-Stack SaaS (Next.js & FastAPI)</span>
+            <span>Personalized Career & Compensation Advisor</span>
           </div>
-          <p>© 2026 CAREER AI® Intelligence Platform. Zero Data Leakage ML Models.</p>
+          <p>© 2026 CAREER AI Platform. Clear, actionable career insights.</p>
         </div>
       </footer>
 
-      {/* Modals */}
+      {/* ─── Modals ─── */}
       <ResumeModal
         isOpen={isResumeModalOpen}
         onClose={() => setIsResumeModalOpen(false)}
@@ -297,6 +320,27 @@ export default function Home() {
         jobs={jobs}
         skillGap={skillGap}
         roadmap={roadmap}
+      />
+
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        metadata={metadata}
+        country={country}
+        jobTitle={jobTitle}
+        setJobTitle={setJobTitle}
+        experience={experience}
+        setExperience={setExperience}
+        location={location}
+        setLocation={setLocation}
+        education={education}
+        setEducation={setEducation}
+        companySize={companySize}
+        setCompanySize={setCompanySize}
+        employmentType={employmentType}
+        setEmploymentType={setEmploymentType}
+        skills={skills}
+        setSkills={setSkills}
       />
     </div>
   );

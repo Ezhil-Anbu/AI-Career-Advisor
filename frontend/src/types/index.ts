@@ -100,12 +100,89 @@ export interface CareerRoadmap {
   milestones: RoadmapMilestone[];
 }
 
+// ─── Resume Project & Work Experience Items ───────────────────────────────────
+export interface ResumeProjectItem {
+  name: string;
+  description?: string | null;
+  skills: string[];
+}
+
+export interface ResumeExperienceItem {
+  company?: string | null;
+  role?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  description?: string | null;
+  skills: string[];
+}
+
+export interface ResumeMetadata {
+  pages_processed: number;
+  text_characters: number;
+  is_scanned_pdf: boolean;
+  evidence: Record<string, unknown>;
+}
+
+// ─── Rich Candidate Profile (from /api/resume/analyze) ───────────────────────
+export interface CandidateProfile {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  role?: string | null;
+  role_confidence?: number | null;
+  target_role?: string | null;
+  experience_years?: number | null;
+  education?: string | null;
+  location?: string | null;
+  country: string;
+  skills: string[];
+  soft_skills: string[];
+  certifications: string[];
+  projects: ResumeProjectItem[];
+  work_experience: ResumeExperienceItem[];
+  summary?: string | null;
+}
+
+// Full response from /api/resume/analyze
+export interface ResumeAnalyzeResponse {
+  success: boolean;
+  profile: CandidateProfile;
+  metadata: ResumeMetadata;
+  error_code?: string | null;
+  message?: string | null;
+}
+
+/**
+ * ResumeParseResult: Used internally by the frontend after resume analysis.
+ * Maps from CandidateProfile to the shape expected by handleApplyResumeData.
+ * Backwards-compatible with the legacy /resume/parse fields.
+ */
 export interface ResumeParseResult {
+  // Legacy fields (kept for backward compat)
   extracted_skills: string[];
   extracted_roles: string[];
   estimated_experience: number;
   extracted_education: string;
   raw_text_length: number;
+
+  // Rich profile fields (from /resume/analyze)
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  country?: string;
+  role?: string | null;
+  role_confidence?: number | null;
+  target_role?: string | null;
+  soft_skills: string[];
+  certifications: string[];
+  projects: ResumeProjectItem[];
+  work_experience: ResumeExperienceItem[];
+  summary?: string | null;
+
+  // Metadata
+  pages_processed?: number;
+  is_scanned_pdf?: boolean;
 }
 
 export interface AppMetadata {

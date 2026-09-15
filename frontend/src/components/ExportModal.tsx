@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { X, Download, Printer, Sparkles, CheckCircle2, Award, Briefcase, DollarSign } from 'lucide-react';
+import {
+  X,
+  Download,
+  Printer,
+  Sparkles,
+  CheckCircle2,
+  Award,
+  Briefcase,
+  DollarSign,
+  MapPin,
+  Calendar,
+  Compass
+} from 'lucide-react';
 import { SalaryPrediction, JobMatch, SkillGapAnalysis, CareerRoadmap } from '@/types';
 import confetti from 'canvas-confetti';
 
@@ -60,7 +72,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         const imgWidth = 210;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`Career-Blueprint-${jobTitle.replace(/\s+/g, '-')}.pdf`);
+        pdf.save(`Career-Report-${jobTitle.replace(/\s+/g, '-')}.pdf`);
 
         confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
       }
@@ -79,7 +91,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-orange-400" />
-            <h3 className="text-base font-bold text-white">Career Intelligence Blueprint</h3>
+            <h3 className="text-base font-bold text-white">Career Intelligence Report</h3>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -115,7 +127,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           <div className="flex items-start justify-between border-b border-white/10 pb-4">
             <div>
               <span className="text-xs font-extrabold tracking-wider uppercase text-orange-400">
-                CAREER AI® Pro Report Card
+                CAREER AI REPORT
               </span>
               <h1 className="text-2xl font-extrabold mt-0.5">{jobTitle}</h1>
               <p className="text-xs text-white/60 mt-0.5">
@@ -123,7 +135,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               </p>
             </div>
             <div className="text-right">
-              <span className="text-[10px] uppercase font-bold text-white/40">Readiness Index</span>
+              <span className="text-[10px] uppercase font-bold text-white/40">Readiness Score</span>
               <div className="text-2xl font-black text-emerald-400">
                 {skillGap ? Math.round(skillGap.overall_readiness_score) : 85}%
               </div>
@@ -136,7 +148,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <DollarSign className="h-4 w-4 text-orange-400 mx-auto mb-1" />
               <div className="text-[10px] text-white/50 font-semibold uppercase">Estimated Salary</div>
               <div className="text-sm font-extrabold text-orange-300 mt-0.5">
-                {prediction?.formatted_salary || '₹14.5 LPA'}
+                {prediction?.formatted_salary || '₹26.7 LPA'}
               </div>
             </div>
 
@@ -144,14 +156,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               <Award className="h-4 w-4 text-emerald-400 mx-auto mb-1" />
               <div className="text-[10px] text-white/50 font-semibold uppercase">Top Match Score</div>
               <div className="text-sm font-extrabold text-emerald-300 mt-0.5">
-                {jobs.length > 0 ? Math.round(jobs[0].match_score) : 92}% Match
+                {jobs.length > 0 ? Math.round(jobs[0].match_score) : 94}% Match
               </div>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 text-center">
-              <Briefcase className="h-4 w-4 text-amber-400 mx-auto mb-1" />
-              <div className="text-[10px] text-white/50 font-semibold uppercase">Job Opportunities</div>
-              <div className="text-sm font-extrabold text-amber-300 mt-0.5">
+              <Briefcase className="h-4 w-4 text-cyan-400 mx-auto mb-1" />
+              <div className="text-[10px] text-white/50 font-semibold uppercase">Opportunities</div>
+              <div className="text-sm font-extrabold text-cyan-300 mt-0.5">
                 {jobs.length} Matched Roles
               </div>
             </div>
@@ -160,7 +172,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           {/* Core Skills Summary */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">
-              Verified Candidate Competencies ({skills.length})
+              Your Skills Profile ({skills.length})
             </h4>
             <div className="flex flex-wrap gap-1.5">
               {skills.map((s) => (
@@ -168,16 +180,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   key={s}
                   className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] font-semibold text-white/80"
                 >
-                  {s}
+                  ✓ {s}
                 </span>
               ))}
             </div>
           </div>
 
-          {/* Top 3 Matched Positions */}
+          {/* Top Matched Positions */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">
-              Top Matched Industry Roles
+              Top Matched Roles
             </h4>
             <div className="space-y-2">
               {jobs.slice(0, 3).map((job) => (
@@ -202,7 +214,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           {roadmap && (
             <div className="border-t border-white/10 pt-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">
-                90-Day Milestones
+                Career Roadmap Milestones
               </h4>
               <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
                 {roadmap.milestones.map((ms) => (
@@ -217,7 +229,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
           {/* Footer watermark */}
           <div className="text-center pt-2 text-[10px] text-white/30 border-t border-white/5">
-            Generated via CAREER AI® Enterprise ML Intelligence • Powered by Scikit-Learn, XGBoost & FastAPI
+            Generated via CAREER AI® Intelligence Platform
           </div>
         </div>
       </div>

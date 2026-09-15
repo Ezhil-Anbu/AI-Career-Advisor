@@ -4,7 +4,8 @@ import {
   JobMatch,
   SkillGapAnalysis,
   CareerRoadmap,
-  ResumeParseResult
+  ResumeParseResult,
+  ResumeAnalyzeResponse
 } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? '/api' : 'http://127.0.0.1:8000/api');
@@ -110,24 +111,87 @@ export async function parseResumeFile(file: File): Promise<ResumeParseResult> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await fetch(`${API_BASE_URL}/resume/parse`, {
+  const res = await fetch(`${API_BASE_URL}/resume/analyze`, {
     method: 'POST',
     body: formData,
   });
-  if (!res.ok) throw new Error('Failed to parse resume file');
-  return await res.json();
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to analyze resume file' }));
+    throw new Error(err.detail || 'Failed to analyze resume file');
+  }
+  const data: ResumeAnalyzeResponse = await res.json();
+  return mapAnalyzeResponseToParseResult(data);
 }
 
 export async function parseResumeText(text: string): Promise<ResumeParseResult> {
   const formData = new FormData();
   formData.append('raw_text', text);
 
-  const res = await fetch(`${API_BASE_URL}/resume/parse`, {
+  const res = await fetch(`${API_BASE_URL}/resume/analyze`, {
     method: 'POST',
     body: formData,
   });
-  if (!res.ok) throw new Error('Failed to parse resume text');
-  return await res.json();
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to analyze resume text' }));
+    throw new Error(err.detail || 'Failed to analyze resume text');
+  }
+  const data: ResumeAnalyzeResponse = await res.json();
+  return mapAnalyzeResponseToParseResult(data);
+}
+
+/** Full rich resume analyze — returns the complete ResumeAnalyzeResponse. */
+export async function analyzeResume(fileOrText: File | string): Promise<ResumeAnalyzeResponse> {
+  const formData = new FormData();
+  if (typeof fileOrText === 'string') {
+    formData.append('raw_text', fileOrText);
+  } else {
+    formData.append('file', fileOrText);
+  }
+
+  const res = await fetch(`${API_BASE_URL}/resume/analyze`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to analyze resume' }));
+    throw new Error(err.detail || 'Failed to analyze resume');
+  }
+  return await res.json() as ResumeAnalyzeResponse;
+}
+
+/**
+ * Map ResumeAnalyzeResponse → ResumeParseResult for backward compat with
+ * existing handleApplyResumeData usage in page.tsx.
+ */
+function mapAnalyzeResponseToParseResult(data: ResumeAnalyzeResponse): ResumeParseResult {
+  if (!data.success) {
+    throw new Error(data.message || 'Resume analysis failed: could not extract text.');
+  }
+  const p = data.profile;
+  return {
+    // Legacy fields
+    extracted_skills: p.skills,
+    extracted_roles: p.role ? [p.role] : [],
+    estimated_experience: p.experience_years ?? 0,
+    extracted_education: p.education ?? 'Bachelor',
+    raw_text_length: data.metadata.text_characters,
+    // Rich fields
+    name: p.name,
+    email: p.email,
+    phone: p.phone,
+    location: p.location,
+    country: p.country,
+    role: p.role,
+    role_confidence: p.role_confidence,
+    target_role: p.target_role,
+    soft_skills: p.soft_skills,
+    certifications: p.certifications,
+    projects: p.projects,
+    work_experience: p.work_experience,
+    summary: p.summary,
+    pages_processed: data.metadata.pages_processed,
+    is_scanned_pdf: data.metadata.is_scanned_pdf,
+  };
 }
 
 // ─── Client Fallback Generators ───────────────────────────────────────────────

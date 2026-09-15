@@ -1,18 +1,32 @@
 'use client';
 
-import React from 'react';
-import { Sparkles, FileText, Download, Briefcase, DollarSign, MapPin, Compass, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Sparkles,
+  DollarSign,
+  Briefcase,
+  BookOpen,
+  Compass,
+  FileText,
+  Download,
+  Menu,
+  X,
+  Home,
+  UserCheck,
+  ChevronDown
+} from 'lucide-react';
 import { SamplePersona } from '@/types';
 
 interface HeaderProps {
-  activeTab: 'salary' | 'jobs' | 'skills';
-  setActiveTab: (tab: 'salary' | 'jobs' | 'skills') => void;
+  activeTab: 'home' | 'salary' | 'jobs' | 'skills' | 'roadmap';
+  setActiveTab: (tab: 'home' | 'salary' | 'jobs' | 'skills' | 'roadmap') => void;
   personas: SamplePersona[];
   onSelectPersona: (persona: SamplePersona) => void;
   country: string;
   setCountry: (country: string) => void;
   onOpenResumeModal: () => void;
   onOpenExportModal: () => void;
+  onOpenEditProfileModal: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,76 +38,72 @@ export const Header: React.FC<HeaderProps> = ({
   setCountry,
   onOpenResumeModal,
   onOpenExportModal,
+  onOpenEditProfileModal,
 }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [personaDropdownOpen, setPersonaDropdownOpen] = useState(false);
+
+  const navItems: { id: 'home' | 'salary' | 'jobs' | 'skills' | 'roadmap'; label: string; icon: any }[] = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'salary', label: 'Salary', icon: DollarSign },
+    { id: 'jobs', label: 'Jobs', icon: Briefcase },
+    { id: 'skills', label: 'Skills', icon: BookOpen },
+    { id: 'roadmap', label: 'Roadmap', icon: Compass },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#07090e]/70 backdrop-blur-2xl">
-      <div className="mx-auto max-w-7xl px-4 py-3.5 sm:px-6 lg:px-8">
-        {/* Main Navbar */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-rose-500 via-orange-500 to-amber-400 p-0.5 shadow-lg shadow-orange-500/25">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#07090e]/80 backdrop-blur-2xl">
+      <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4">
+          {/* ─── Brand Logo ─── */}
+          <div
+            onClick={() => setActiveTab('home')}
+            className="flex items-center gap-3 cursor-pointer group"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-rose-500 via-orange-500 to-amber-400 p-0.5 shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform">
               <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-[#07090e]">
                 <Sparkles className="h-5 w-5 text-orange-400 animate-pulse" />
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-extrabold tracking-tight text-white">
-                  CAREER <span className="bg-gradient-to-r from-rose-400 via-orange-400 to-amber-300 bg-clip-text text-transparent">AI®</span>
-                </span>
-                <span className="rounded-full border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-400">
-                  Enterprise ML
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg font-black tracking-tight text-white">
+                  CAREER <span className="bg-gradient-to-r from-rose-400 via-orange-400 to-amber-300 bg-clip-text text-transparent">AI</span>
                 </span>
               </div>
-              <p className="text-xs text-white/50">Next-Gen Career Intelligence & Salary Forecaster</p>
+              <p className="text-[11px] text-white/50 hidden sm:block">Smart Career & Salary Advisor</p>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-xl">
-            <button
-              onClick={() => setActiveTab('salary')}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-all ${
-                activeTab === 'salary'
-                  ? 'bg-gradient-to-r from-rose-500/20 to-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <DollarSign className="h-4 w-4" />
-              <span>Salary Forecaster</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('jobs')}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-all ${
-                activeTab === 'jobs'
-                  ? 'bg-gradient-to-r from-rose-500/20 to-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Briefcase className="h-4 w-4" />
-              <span>Job Matcher</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('skills')}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-all ${
-                activeTab === 'skills'
-                  ? 'bg-gradient-to-r from-rose-500/20 to-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Compass className="h-4 w-4" />
-              <span>Skill Gap & Roadmap</span>
-            </button>
+          {/* ─── Desktop Navigation Tabs ─── */}
+          <nav className="hidden md:flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1 backdrop-blur-xl">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-rose-500/20 to-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Action CTAs: Country Toggle, Resume Upload & Export */}
-          <div className="flex items-center gap-2">
+          {/* ─── Right Controls: Currency, Upload, Export ─── */}
+          <div className="hidden lg:flex items-center gap-2.5">
             {/* Country Selector */}
-            <div className="flex rounded-lg border border-white/10 bg-white/[0.04] p-0.5">
+            <div className="flex rounded-lg border border-white/10 bg-white/[0.03] p-0.5 text-xs">
               <button
                 onClick={() => setCountry('India')}
-                className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+                className={`rounded-md px-2.5 py-1 font-semibold transition-all ${
                   country === 'India'
                     ? 'bg-orange-500 text-white shadow-sm'
                     : 'text-white/60 hover:text-white'
@@ -103,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
               <button
                 onClick={() => setCountry('United States')}
-                className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+                className={`rounded-md px-2.5 py-1 font-semibold transition-all ${
                   country === 'United States'
                     ? 'bg-orange-500 text-white shadow-sm'
                     : 'text-white/60 hover:text-white'
@@ -116,42 +126,100 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Resume Upload CTA */}
             <button
               onClick={onOpenResumeModal}
-              className="btn-glass flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium"
-              title="Upload PDF Resume to auto-extract skills"
+              className="btn-gradient flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold"
             >
-              <FileText className="h-3.5 w-3.5 text-orange-400" />
-              <span className="hidden sm:inline">Upload CV</span>
+              <FileText className="h-3.5 w-3.5" />
+              <span>Upload Resume</span>
             </button>
 
-            {/* Export Report CTA */}
+            {/* Export CTA */}
             <button
               onClick={onOpenExportModal}
-              className="btn-gradient flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold"
-              title="Export Career Blueprint Report"
+              className="btn-glass flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold"
             >
-              <Download className="h-3.5 w-3.5" />
-              <span>Export Report</span>
+              <Download className="h-3.5 w-3.5 text-white/70" />
+              <span>Export</span>
+            </button>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              onClick={onOpenResumeModal}
+              className="btn-gradient flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>Resume</span>
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-lg border border-white/10 bg-white/5 p-2 text-white/70 hover:text-white"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
-        {/* 1-Click Quick-Start Personas Bar */}
-        <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none">
-          <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-orange-400 shrink-0">
-            <Zap className="h-3.5 w-3.5" />
-            <span>Quick Personas:</span>
+        {/* ─── Mobile Expandable Navigation Menu ─── */}
+        {mobileMenuOpen && (
+          <div className="mt-3 pt-3 border-t border-white/10 flex flex-col gap-2 md:hidden">
+            <div className="grid grid-cols-5 gap-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`flex flex-col items-center justify-center gap-1 rounded-lg p-2 text-[10px] font-semibold transition-all ${
+                      isActive
+                        ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40'
+                        : 'text-white/60 hover:text-white bg-white/[0.02]'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between gap-2 pt-2">
+              <div className="flex rounded-lg border border-white/10 bg-white/[0.03] p-0.5 text-xs w-full">
+                <button
+                  onClick={() => setCountry('India')}
+                  className={`flex-1 rounded-md py-1 font-semibold text-center ${
+                    country === 'India' ? 'bg-orange-500 text-white' : 'text-white/60'
+                  }`}
+                >
+                  🇮🇳 INR (₹)
+                </button>
+                <button
+                  onClick={() => setCountry('United States')}
+                  className={`flex-1 rounded-md py-1 font-semibold text-center ${
+                    country === 'United States' ? 'bg-orange-500 text-white' : 'text-white/60'
+                  }`}
+                >
+                  🇺🇸 USD ($)
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  onOpenExportModal();
+                  setMobileMenuOpen(false);
+                }}
+                className="btn-glass flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold shrink-0"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Export</span>
+              </button>
+            </div>
           </div>
-          {personas.map((persona) => (
-            <button
-              key={persona.id}
-              onClick={() => onSelectPersona(persona)}
-              className="flex items-center gap-1.5 shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-white/80 transition-all hover:border-orange-500/40 hover:bg-orange-500/10 hover:text-orange-300 active:scale-95"
-            >
-              <span>{persona.icon}</span>
-              <span>{persona.label}</span>
-            </button>
-          ))}
-        </div>
+        )}
       </div>
     </header>
   );
